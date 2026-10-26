@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PASHA – Sevimli OLED Robot Kontrol Paneli</title>
+  
+  <!-- PWA ve Mobil Entegrasyonu -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#07090e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pasha">
+  <link rel="apple-touch-icon" href="assets/pasha_logo.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/pasha_logo.svg">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ÜST HEADER & BAĞLANTI ÇUBUĞU -->
+  <header class="app-header">
+    <div class="brand">
+      <img src="assets/pasha_logo.svg" alt="Pasha Logo" class="brand-logo">
+      <div class="brand-text">
+        <h1>PASHA</h1>
+        <p id="fwVersionText">Akıllı Masaüstü Robotu</p>
+      </div>
+    </div>
+
+    <div class="connection-box">
+      <div id="connectionBadge" class="status-badge">
+        <span class="status-dot"></span>
+        <span id="badgeText">Bağlantı Yok</span>
+      </div>
+      <button id="btnConnect" class="btn-ble">
+        <span>Bağlan</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- CANLI 128x64 OLED SİMÜLATÖRÜ -->
+  <section class="simulator-section">
+    <div class="oled-bezel">
+      <div class="oled-screen-container">
+        <canvas id="oledCanvas"></canvas>
+      </div>
+      <div class="oled-info-bar">
+        <span>128×64 SH1106 OLED</span>
+        <div class="screen-tabs">
+          <button class="screen-tab-btn active" data-screen="face">Yüz</button>
+          <button class="screen-tab-btn" data-screen="clock">Saat</button>
+          <button class="screen-tab-btn" data-screen="weather">Hava</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANA KONTROL BÖLÜMÜ -->
+  <main class="main-content">
+
+    <!-- 1. KART: DUYGU İFADELERİ -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">✨</span>
+          <span>Duygu İfadeleri</span>
+        </div>
+        <div class="mode-toggle-box">
+          <span>Otomatik</span>
+          <label class="switch">
+            <input type="checkbox" id="autoModeToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="exprGrid" class="expressions-grid">
+        <!-- İfade butonları JavaScript tarafından oluşturulur -->
+      </div>
+    </div>
+
+    <!-- 2. KART: GÖRSEL STİLLER -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">🎨</span>
+          <span>Görsel Stiller</span>
+        </div>
+      </div>
+
+      <div class="styles-container">
+        <!-- Yüz Stili -->
+        <div class="style-row">
+          <span class="style-row-label">Yüz Stili</span>
+          <div id="faceStyleOptions" class="style-options">
+            <div class="style-chip" data-val="0">Nokta</div>
+            <div class="style-chip active" data-val="1">Klasik Robot</div>
+            <div class="style-chip" data-val="2">Kawaii</div>
+            <div class="style-chip" data-val="3">Retro Piksel</div>
+          </div>
+        </div>
+
+        <!-- Saat Stili -->
+        <div class="style-row">
+          <span class="style-row-label">Saat Stili</span>
+          <div id="clockStyleOptions" class="style-options">
+            <div class="style-chip active" data-val="0">Büyük Dijital</div>
+            <div class="style-chip" data-val="1">Mini Yüz</div>
+            <div class="style-chip" data-val="2">Analog</div>
+            <div class="style-chip" data-val="3">7-Segment</div>
+          </div>
+        </div>
+
+        <!-- Hava Stili -->
+        <div class="style-row">
+          <span class="style-row-label">Hava Durumu Stili</span>
+          <div id="weatherStyleOptions" class="style-options">
+            <div class="style-chip active" data-val="0">Büyük İkon</div>
+            <div class="style-chip" data-val="1">Animasyonlu</div>
+            <div class="style-chip" data-val="2">Kompakt Metin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. KART: HAVA DURUMU & GEOLOCATION -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">🌤️</span>
+          <span>Hava Durumu</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleWeatherEn" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="weather-status-card">
+        <div class="weather-info-main">
+          <div id="weatherTemp" class="weather-big-temp">--°C</div>
+          <div class="weather-details-col">
+            <div id="weatherCity" class="weather-city-text">Konum bekleniyor...</div>
+            <div id="weatherDesc" class="weather-desc-text">Open-Meteo Servisi</div>
+          </div>
+        </div>
+        <button id="btnGetLocationWeather" class="btn-secondary" title="Cihaz Konumunu Kullan">
+          <span>📍 Konum</span>
+        </button>
+      </div>
+
+      <div class="city-search-box">
+        <input type="text" id="inputCity" class="text-input" placeholder="Şehir adı yazın (örn: Ankara)...">
+        <button id="btnSearchCity" class="btn-secondary">Ara</button>
+      </div>
+    </div>
+
+    <!-- 4. KART: ZAMANLAYICI & SAAT AYARLARI -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">⏱️</span>
+          <span>Zamanlayıcı & Saat</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleClockEn" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-list">
+        <div class="setting-item">
+          <button id="btnSyncTime" class="btn-secondary" style="width: 100%;">
+            <span>⏰ Anlık Saati Şimdi Senkronize Et</span>
+          </button>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-top">
+            <span>Ekranlar Arası Döngü Süresi</span>
+            <span id="valCycleInterval" class="setting-value">30 sn</span>
+          </div>
+          <input type="range" id="sliderCycleInterval" class="slider-input" min="10" max="120" step="5" value="30">
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-top">
+            <span>Saat Ekranda Kalma Süresi</span>
+            <span id="valClockDuration" class="setting-value">5 sn</span>
+          </div>
+          <input type="range" id="sliderClockDuration" class="slider-input" min="3" max="30" step="1" value="5">
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-top">
+            <span>Hava Durumu Kalma Süresi</span>
+            <span id="valWeatherDuration" class="setting-value">5 sn</span>
+          </div>
+          <input type="range" id="sliderWeatherDuration" class="slider-input" min="3" max="30" step="1" value="5">
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. KART: EKRAN & GÜÇ AYARLARI -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">🔋</span>
+          <span>Ekran & Güç Yönetimi</span>
+        </div>
+      </div>
+
+      <div class="settings-list">
+        <div class="setting-item">
+          <div class="setting-top">
+            <span>Ekran Parlaklığı (Kontrast)</span>
+            <span id="valBrightness" class="setting-value">255</span>
+          </div>
+          <input type="range" id="sliderBrightness" class="slider-input" min="10" max="255" step="5" value="255">
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-top">
+            <span>Otomatik Ekran Uykusu</span>
+            <span id="valSleep" class="setting-value">10 dk</span>
+          </div>
+          <input type="range" id="sliderSleep" class="slider-input" min="0" max="60" step="5" value="10">
+        </div>
+
+        <div style="margin-top: 10px;">
+          <button id="btnResetDefaults" class="btn-danger" style="width: 100%;">
+            <span>Fabrika Ayarlarına Sıfırla</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BİLDİRİM TOAST MESAJI -->
+  <div id="toast" class="toast"></div>
+
+  <!-- UYGULAMA JAVASCRIPT MODÜLLERİ -->
+  <script src="js/oled_simulator.js"></script>
+  <script src="js/weather_provider.js"></script>
+  <script src="js/ble_client.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "Pasha Robot Kontrolcüsü",
+  "short_name": "Pasha",
+  "description": "Pasha Sevimli OLED Robot Kontrol Paneli ve Sürücüsü",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080c14",
+  "theme_color": "#00f2fe",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./assets/pasha_logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
